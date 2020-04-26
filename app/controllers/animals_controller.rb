@@ -4,7 +4,7 @@ class AnimalsController < ApplicationController
   # GET /animals
   # GET /animals.json
   def index
-    @animals = Animal.all
+    @animals = Animal.order(name: :asc)
   end
 
   # GET /animals/1
@@ -32,7 +32,7 @@ class AnimalsController < ApplicationController
         format.json { render :show, status: :created, location: @animal }
       else
         format.html { render :new }
-        format.json { render json: @animal.errors, status: :unprocessable_entity }
+        format.json { render json: @animal.errors.full_messages.to_sentence, status: :unprocessable_entity }
       end
     end
   end

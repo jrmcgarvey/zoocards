@@ -3,7 +3,38 @@
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button> -->
-
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">New Animal</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="animal_form">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" class="form-control" id="name" name='name'>
+            </div>
+            <div class="form-group">
+              <label for="pic">Picture</label>
+              <input type="text" class="form-control" id="pic" name='pic'>
+            </div>
+            <div class="form-group">
+              <label for="description">Description</label>
+              <input type="textarea" class="form-control" id="description" name='description'>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="submit-new-animal">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item active">
@@ -12,6 +43,9 @@
       </li>
       <li class="nav-item">
         <%= link_to "New Animal", new_animal_path, class: 'nav-link' %>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-toggle="modal" data-target="#exampleModal">Another new animal</button>
       </li>
       <!-- <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -34,3 +68,48 @@
     </form> -->
   </div>
 </nav>
+<script type="text/javascript">
+  function formToJSON( selector ) {
+    var form = {};
+    $(selector).find(':input[name]:enabled').each( function() {
+      var self = $(this);
+      var name = self.attr('name');
+      if (form[name]) {
+        form[name] = form[name] + ',' + self.val();
+      }
+      else {
+        form[name] = self.val();
+      }
+   });
+    return form;
+  }
+  $(document).ready(function () {
+    var token = $( 'meta[name="csrf-token"]' ).attr( 'content' );
+    $.ajaxSetup( {
+      beforeSend: function ( xhr ) {
+        xhr.setRequestHeader( 'X-CSRF-Token', token );
+      }
+    });
+    $('#submit-new-animal').on('click', function(e){
+        aData = JSON.stringify(formToJSON("#animal_form"));
+        aData = `{"animal": ${aData}}`
+        $.ajax({
+            url: '<%= animals_path %>', //this is the submit URL
+            type: 'POST',
+            data: aData,
+            contentType: "application/json",
+            dataType: "json",
+            success: function(data){
+              alert('The animal record was successfully added.');
+              $('#exampleModal').remove();
+              $(".modal-backdrop").remove();
+              $('body').removeClass('modal-open');
+              window.location.reload();
+            },
+            error: function(jqXHR, status, error) {
+              alert("The animal record could not be created. " + jqXHR.responseText);
+            }
+        });
+    });
+});
+</script>
