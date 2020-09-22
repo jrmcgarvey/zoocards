@@ -69,47 +69,94 @@
   </div>
 </nav>
 <script type="text/javascript">
-  function formToJSON( selector ) {
-    var form = {};
-    $(selector).find(':input[name]:enabled').each( function() {
-      var self = $(this);
-      var name = self.attr('name');
-      if (form[name]) {
-        form[name] = form[name] + ',' + self.val();
+  // function formToJSON( selector ) {
+  //   var form = {};
+  //   $(selector).find(':input[name]:enabled').each( function() {
+  //     var self = $(this);
+  //     var name = self.attr('name');
+  //     if (form[name]) {
+  //       form[name] = form[name] + ',' + self.val();
+  //     }
+  //     else {
+  //       form[name] = self.val();
+  //     }
+  //  });
+  //   return form;
+  // }
+  document.addEventListener("DOMContentLoaded", () => {
+    function formToJSONB( selector ) {
+      // const formEntry = document.querySelector(selector);
+      // console.log(formEntry);
+      formObject = {};
+      const formInputs = document.querySelectorAll(selector + ' input:enabled');
+      // console.log(formInputs);
+      for (let i=0; i<formInputs.length; i += 1) {
+        // console.log("i is ", i)
+        console.log('name',formInputs[i].name,'value',formInputs[i].value);
+        formObject[formInputs[i].name] = formInputs[i].value;
       }
-      else {
-        form[name] = self.val();
-      }
-   });
-    return form;
-  }
-  $(document).ready(function () {
-    var token = $( 'meta[name="csrf-token"]' ).attr( 'content' );
-    $.ajaxSetup( {
-      beforeSend: function ( xhr ) {
-        xhr.setRequestHeader( 'X-CSRF-Token', token );
-      }
+      return formObject;
+    }
+    // var token = $( 'meta[name="csrf-token"]' ).attr( 'content' );
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    // console.log('csrfToken',csrfToken);
+    const submitButton = document.querySelector("#submit-new-animal");
+    submitButton.addEventListener('click', () => {
+      let aData = JSON.stringify(formToJSONB("#animal_form"));
+      aData = `{"animal": ${aData}}`
+
+      xhr = new XMLHttpRequest();
+      xhr.open("POST","<%= animals_path %>");
+      xhr.setRequestHeader('X-CSRF-Token',csrfToken);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.setRequestHeader("Accept", "application/json");
+      // xhr.responseType = "json";
+      // console.log("aData",aData)
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          // console.log("xhr status", xhr.status);
+          // console.log("xhr.reponseText", xhr.responseText);
+          // console.log("xhr.statusText", xhr.statusText);
+          if (xhr.status === 0 || (xhr.status>=200 && xhr.status < 400)) {
+            alert("The animal record was succesfully added.");
+            // need to dismiss the dialog and remove the modal open backdrop
+            // also need to refresh the page
+            // maybe just refresh the page?
+            window.location.reload();
+          } else {
+            alert("The animal record could not be created. " + xhr.responseText);
+          }
+        }
+      };
+      xhr.send(aData);
     });
-    $('#submit-new-animal').on('click', function(e){
-        aData = JSON.stringify(formToJSON("#animal_form"));
-        aData = `{"animal": ${aData}}`
-        $.ajax({
-            url: '<%= animals_path %>', //this is the submit URL
-            type: 'POST',
-            data: aData,
-            contentType: "application/json",
-            dataType: "json",
-            success: function(data){
-              alert('The animal record was successfully added.');
-              $('#exampleModal').remove();
-              $(".modal-backdrop").remove();
-              $('body').removeClass('modal-open');
-              window.location.reload();
-            },
-            error: function(jqXHR, status, error) {
-              alert("The animal record could not be created. " + jqXHR.responseText);
-            }
-        });
-    });
+
+    // $.ajaxSetup( {
+    //   beforeSend: function ( xhr ) {
+    //     xhr.setRequestHeader( 'X-CSRF-Token', token );
+    //   }
+    // });
+    // $('#submit-new-animal').on('click', function(e){
+    //     // formToJSONB("#animal_form")
+    //     aData = JSON.stringify(formToJSONB("#animal_form"));
+    //     aData = `{"animal": ${aData}}`
+    //     $.ajax({
+    //         url: '<%# = animals_path %>', //this is the submit URL
+    //         type: 'POST',
+    //         data: aData,
+    //         contentType: "application/json",
+    //         dataType: "json",
+    //         success: function(data){
+    //           alert('The animal record was successfully added.');
+    //           $('#exampleModal').remove();
+    //           $(".modal-backdrop").remove();
+    //           $('body').removeClass('modal-open');
+    //           window.location.reload();
+    //         },
+    //         error: function(jqXHR, status, error) {
+    //           alert("The animal record could not be created. " + jqXHR.responseText);
+    //         }
+    //     });
+    // });
 });
 </script>
